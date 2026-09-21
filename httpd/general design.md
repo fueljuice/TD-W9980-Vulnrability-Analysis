@@ -101,7 +101,7 @@ v37 = strstr(v34, "boundary=");
 v38 = v37 + 9;
 if ( !v37 )
 ```
-a field called "Basic" which supposed to contain cookies
+a field called "Basic" which supposed to contain cookies, and an auth check in `sub_404DF8`
 ```c
 if ( !strncmp(v43, "Basic ", 6u) )
 {
@@ -110,3 +110,53 @@ if ( !strncmp(v43, "Basic ", 6u) )
 }
 LABEL_104:
 ```
+in the end it calls the dispatch to the enpoints(/cgi/...)
+```c
+  while ( 1 )
+  {
+    v27 = (int (__fastcall *)(int *))s[14];
+    if ( !s[14] )
+      break;
+    s[14] = 0;
+    v24 = v27(s); // HERE IS THE CALL
+    fflush(*(FILE **)(a1 + 4124));
+    result = 0;
+    if ( v24 == -1 )
+      return result;
+    v26 = v24;
+    if ( v24 )
+      goto LABEL_136;
+  }
+```
+
+## endpoints
+
+ill cover every endpoints ive researched  <br>
+
+**/cgi/auth** is used to acsess the passsword and changing password.in order to change the password, given the disk serves as readonly, it uses a a protpritery protocol called rdp. with `rdp_getObj/setObj`, it flashes it to the disk or some other non volitaile memory.
+<br>
+**/cgi/softup** is the endpoint called for updating the firmware.
+it starts by allocating a buffer for the firmware
+```c
+      if ( dword_433424 || (dword_433424 = cmem_updateFirmwareBufAlloc()) != 0 )
+```
+then it calls a parsing function `sub_403A2C` that parses for http fields and the file name:
+```c
+
+if ( !sub_405B80(DEST, "Content-Disposition") )
+
+if ( strcmp(v28, "name") )
+
+if ( !strcmp(v28, "filename") )
+
+```
+and updates the firmware using the rdp protoco from eariler: 
+```c 
+updated = rdp_updateFirmware(dword_433424, dword_433428);
+```
+**/cgi/confup***
+makes a rdp buffer
+```c
+          if ( rdp_configBufFree(dword_433434, v7) < 0 )
+```
+from there it acts very similar to softup, but with slightly diffrent error messages/ sucsess messages
